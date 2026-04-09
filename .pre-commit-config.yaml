@@ -8,13 +8,13 @@ default_stages: [pre-commit]
 # This is a template for connector pre-commit hooks
 repos:
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v4.1.0
+    rev: v4.2.0
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: [--verbose]
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-merge-conflict
       - id: end-of-file-fixer
@@ -27,7 +27,7 @@ repos:
       - id: check-json
       - id: check-yaml
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.7
+    rev: v0.13.2
     hooks:
       - id: ruff
         args: [ "--fix", "--unsafe-fixes"] # Allow unsafe fixes (ruff pretty strict about what it can fix)
@@ -37,11 +37,28 @@ repos:
     hooks:
       - id: djlint-reformat-django
       - id: djlint-django
+  # Default target "." hits soar-app-linter 0.1.0 bug (listdir("") in _ensure_init_files).
+  # --no-deps skips brittle "pip install uv" into project .venv; use uv sync .venv for imports.
   - repo: https://github.com/phantomcyber/soar-app-linter
     rev: 0.1.0
     hooks:
       - id: soar-app-linter
-        args: ["--single-repo", "--message-level", "error"]
+        entry: python
+        pass_filenames: false
+        args:
+          - -c
+          - |
+              import subprocess, sys
+              from pathlib import Path
+              root = str(Path.cwd().resolve())
+              raise SystemExit(subprocess.call([
+                  "soar-app-linter",
+                  "--single-repo",
+                  "--message-level",
+                  "error",
+                  "--no-deps",
+                  root,
+              ]))
   - repo: https://github.com/hukkin/mdformat
     rev: 0.7.22
     hooks:
@@ -51,21 +68,28 @@ repos:
     rev: v1.89.0
     hooks:
       - id: semgrep
+        # Match pyproject requires-python; avoid 3.14+ until semgrep/protobuf wheels catch up.
+        language_version: python3.13
+        # opentelemetry imports pkg_resources; setuptools>=82 removed it. Pin below 82.
+        additional_dependencies: [setuptools<82]
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:
       - id: detect-secrets
         args: ['--no-verify']
         exclude_types: [json]
-        exclude: "README.md"
+        exclude: "README.md|test/test_asset\\.json\\.example"
   # Central hooks
   - repo: https://github.com/phantomcyber/dev-cicd-tools
-    rev: v2.0.9
+    rev: v2.0.5
     hooks:
+      # Require a Splunk SOAR app JSON at repo root; run manually when present:
+      #   pre-commit run build-docs notice-file static-tests --hook-stage manual --all-files
       - id: build-docs
         language: python
         additional_dependencies: ["local-hooks"]
         args: ['.']
+        stages: [manual]
       - id: copyright
         language: python
         additional_dependencies: ["local-hooks"]
@@ -77,6 +101,7 @@ repos:
         language: python
         additional_dependencies: ["local-hooks"]
         args: ['.']
+        stages: [manual]
       - id: release-notes
         language: python
         additional_dependencies: ["local-hooks"]
@@ -85,3 +110,4 @@ repos:
         language: python
         additional_dependencies: ["local-hooks"]
         args: ['.']
+        stages: [manual]
