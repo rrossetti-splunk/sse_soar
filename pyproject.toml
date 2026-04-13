@@ -21,7 +21,7 @@ soarapps-test = [
 ]
 
 [tool.soar.app]
-main_module = "src.app:app"
+main_module = "app"
 
 ### YOU SHOULD NOT NEED TO TOUCH ANYTHING BELOW THIS LINE ###
 

@@ -37,28 +37,11 @@ repos:
     hooks:
       - id: djlint-reformat-django
       - id: djlint-django
-  # Default target "." hits soar-app-linter 0.1.0 bug (listdir("") in _ensure_init_files).
-  # --no-deps skips brittle "pip install uv" into project .venv; use uv sync .venv for imports.
   - repo: https://github.com/phantomcyber/soar-app-linter
     rev: 0.1.0
     hooks:
       - id: soar-app-linter
-        entry: python
-        pass_filenames: false
-        args:
-          - -c
-          - |
-              import subprocess, sys
-              from pathlib import Path
-              root = str(Path.cwd().resolve())
-              raise SystemExit(subprocess.call([
-                  "soar-app-linter",
-                  "--single-repo",
-                  "--message-level",
-                  "error",
-                  "--no-deps",
-                  root,
-              ]))
+        args: ["--single-repo", "--message-level", "error"]
   - repo: https://github.com/hukkin/mdformat
     rev: 0.7.22
     hooks:
@@ -68,10 +51,8 @@ repos:
     rev: v1.89.0
     hooks:
       - id: semgrep
-        # Match pyproject requires-python; avoid 3.14+ until semgrep/protobuf wheels catch up.
-        language_version: python3.13
-        # opentelemetry imports pkg_resources; setuptools>=82 removed it. Pin below 82.
-        additional_dependencies: [setuptools<82]
+        # setuptools 82+ drops pkg_resources; semgrep/opentelemetry still import it
+        additional_dependencies: ["setuptools>=69,<82"]
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:
@@ -83,13 +64,10 @@ repos:
   - repo: https://github.com/phantomcyber/dev-cicd-tools
     rev: v2.0.5
     hooks:
-      # Require a Splunk SOAR app JSON at repo root; run manually when present:
-      #   pre-commit run build-docs notice-file static-tests --hook-stage manual --all-files
       - id: build-docs
         language: python
         additional_dependencies: ["local-hooks"]
         args: ['.']
-        stages: [manual]
       - id: copyright
         language: python
         additional_dependencies: ["local-hooks"]
@@ -101,7 +79,6 @@ repos:
         language: python
         additional_dependencies: ["local-hooks"]
         args: ['.']
-        stages: [manual]
       - id: release-notes
         language: python
         additional_dependencies: ["local-hooks"]
@@ -110,4 +87,3 @@ repos:
         language: python
         additional_dependencies: ["local-hooks"]
         args: ['.']
-        stages: [manual]
