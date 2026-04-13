@@ -181,5 +181,8 @@ test_asset.json
 test_params.json
 test.sh
 
+# SDKfied SOAR CI (`soarapps manifests create`); do not commit
+temp_app.json
+
 .cursor/
 .DS_Store
