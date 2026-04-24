@@ -22,6 +22,35 @@ class ListDestinationListsParams(Params):
     )
 
 
+DESTINATION_LIST_ACCESS_VALUES = [
+    "allow",
+    "block",
+    "url_proxy",
+    "no_decrypt",
+    "warn",
+    "none",
+    "thirdparty_block",
+]
+
+
+class CreateDestinationListParams(Params):
+    """Parameters for Create Destination List. POST policies/v2/destinationlists. Requires policies.destinationLists:write."""
+
+    name: str = Param(
+        required=True,
+        description="Name of the destination list.",
+    )
+    access: str = Param(
+        required=True,
+        description="Access classification for the list (used with access rules). Cannot create lists with access type thirdparty_block via this API.",
+        value_list=DESTINATION_LIST_ACCESS_VALUES,
+    )
+    destinations_json: str = Param(
+        required=False,
+        description='Optional JSON array of up to 500 destinations, e.g. [{"destination":"cisco.com","type":"domain","comment":"optional"}]. type: domain, url, or ipv4.',
+    )
+
+
 class AddToDestinationListParams(Params):
     destination_list_id: int = Param(
         required=False,

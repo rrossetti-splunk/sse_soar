@@ -917,6 +917,228 @@
             "versions": "EQ(*)"
         },
         {
+            "action": "create destination list",
+            "identifier": "create_destination_list",
+            "description": "Create Destination List (optional initial destinations, up to 500 per request). POST policies/v2/destinationlists. Requires policies.destinationLists:write. isGlobal is always false (no global lists on create); bundleTypeId is always 2.",
+            "type": "generic",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "data_type": "string",
+                    "order": 0,
+                    "description": "Name of the destination list.",
+                    "required": true
+                },
+                "access": {
+                    "data_type": "string",
+                    "order": 1,
+                    "description": "Access classification: allow, block, url_proxy, no_decrypt, warn, none, thirdparty_block.",
+                    "required": true,
+                    "value_list": [
+                        "allow",
+                        "block",
+                        "url_proxy",
+                        "no_decrypt",
+                        "warn",
+                        "none",
+                        "thirdparty_block"
+                    ]
+                },
+                "destinations_json": {
+                    "data_type": "string",
+                    "order": 2,
+                    "description": "Optional JSON array of up to 500 destinations: {\"destination\",\"type\":\"domain|url|ipv4\",\"comment\"?}.",
+                    "required": false
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failure"
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.access",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.destinations_json",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.id",
+                    "data_type": "numeric",
+                    "column_name": "List ID",
+                    "column_order": 0,
+                    "render": {
+                        "type": "table"
+                    }
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.organizationId",
+                    "data_type": "numeric",
+                    "column_name": "Organization ID",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.access",
+                    "data_type": "string",
+                    "column_name": "Access",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.isGlobal",
+                    "data_type": "boolean",
+                    "column_name": "Global",
+                    "column_order": 3,
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.name",
+                    "data_type": "string",
+                    "column_name": "Name",
+                    "column_order": 4
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.thirdpartyCategoryId",
+                    "data_type": "numeric",
+                    "column_name": "Third-party category ID",
+                    "column_order": 5
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.createdAt",
+                    "data_type": "numeric",
+                    "column_name": "Created at",
+                    "column_order": 6
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.modifiedAt",
+                    "data_type": "numeric",
+                    "column_name": "Modified at",
+                    "column_order": 7
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.isMspDefault",
+                    "data_type": "boolean",
+                    "column_name": "MSP default",
+                    "column_order": 8,
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.markedForDeletion",
+                    "data_type": "boolean",
+                    "column_name": "Marked for deletion",
+                    "column_order": 9,
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.bundleTypeId",
+                    "data_type": "numeric",
+                    "column_name": "Bundle type ID",
+                    "column_order": 10
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.destinationCount",
+                    "data_type": "numeric",
+                    "column_name": "Destination count",
+                    "column_order": 11
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.domainCount",
+                    "data_type": "numeric",
+                    "column_name": "Domain count",
+                    "column_order": 12
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.urlCount",
+                    "data_type": "numeric",
+                    "column_name": "URL count",
+                    "column_order": 13
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.ipv4Count",
+                    "data_type": "numeric",
+                    "column_name": "IPv4 count",
+                    "column_order": 14
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.ipv6Count",
+                    "data_type": "numeric",
+                    "column_name": "IPv6 count",
+                    "column_order": 15
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.applicationCount",
+                    "data_type": "numeric",
+                    "column_name": "Application count",
+                    "column_order": 16
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.destinations.*.id",
+                    "data_type": "string",
+                    "column_name": "Destination entry ID"
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.destinations.*.type",
+                    "data_type": "string",
+                    "column_name": "Destination type"
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.destinations.*.createdAt",
+                    "data_type": "string",
+                    "column_name": "Destination created at"
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.destinations.*.destination",
+                    "data_type": "string",
+                    "column_name": "Destination",
+                    "contains": [
+                        "domain"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.destinationList.destinations.*.comment",
+                    "data_type": "string",
+                    "column_name": "Comment"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
             "action": "add to destination list",
             "identifier": "add_to_destination_list",
             "description": "Add to Destination List (one destination and optional comment per run).",

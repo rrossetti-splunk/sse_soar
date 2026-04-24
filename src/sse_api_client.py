@@ -359,6 +359,28 @@ class SSE_API:
         )
         return result["data"]
 
+    def CreateDestinationList(self, body: dict):
+        """
+        Create a destination list in the organization.
+        POST policies/v2/destinationlists. Requires policies.destinationLists:write.
+        https://developer.cisco.com/docs/cloud-security/create-destination-list/
+
+        Args:
+            body: Request object with access, name, bundleTypeId (always 2 per API),
+                  isGlobal (always false; global destination lists are not supported on create),
+                  and optional destinations (max 500 items).
+
+        Returns:
+            Parsed JSON (typically includes status and data with the new list metadata).
+        """
+        res = self.Query(
+            scope=policies,
+            end_point="destinationlists",
+            operation=POST,
+            request_data=body,
+        )
+        return self.ParseJsonResponse(res)
+
     def GetDestinationsFromListById(self, destination_list_id):
         end_point_destination_list_id = (
             f"destinationlists/{destination_list_id}/destinations"

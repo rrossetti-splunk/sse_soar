@@ -124,6 +124,31 @@ def mock_client():
         "isMspDefault": False,
         "markedForDeletion": False,
     }
+    _created_destination_list_data = {
+        "id": 2477857,
+        "organizationId": 22429759,
+        "access": "none",
+        "isGlobal": False,
+        "name": "New Destination List",
+        "thirdpartyCategoryId": 0,
+        "createdAt": 1532628019,
+        "modifiedAt": 1532628019,
+        "isMspDefault": False,
+        "markedForDeletion": False,
+        "bundleTypeId": 2,
+        "meta": {
+            "destinationCount": 1,
+            "domainCount": 1,
+            "urlCount": 0,
+            "ipv4Count": 0,
+            "ipv6Count": 0,
+            "applicationCount": 0,
+        },
+    }
+    client.CreateDestinationList.return_value = {
+        "status": {"code": 200, "text": "OK"},
+        "data": _created_destination_list_data,
+    }
     client.AddToDestinationList.return_value = {"data": _destination_list_data}
     client.RemoveDestinationsFromList.return_value = _destination_list_data
     client.GetDomainStatus.return_value = {
@@ -378,6 +403,44 @@ def test_add_to_destination_list(asset, params_data):
     result = _action(add_to_destination_list)(params, asset)
     assert result is not None
     assert hasattr(result, "destinationList")
+
+
+def _create_destination_list_params():
+    from src.params import CreateDestinationListParams
+
+    return CreateDestinationListParams(
+        name="SOAR test destination list",
+        access="none",
+        destinations_json='[{"destination":"example.com","type":"domain"}]',
+    )
+
+
+def test_create_destination_list(asset):
+    from src.app import create_destination_list
+
+    params = _create_destination_list_params()
+    result = _action(create_destination_list)(params, asset)
+    assert result is not None
+    assert hasattr(result, "destinationList")
+    assert result.destinationList.id == 2477857
+    assert result.destinationList.bundleTypeId == 2
+    assert result.destinationList.destinationCount == 1
+
+
+def test_create_destination_list_calls_client(asset, mock_client):
+    from src.app import create_destination_list
+
+    params = _create_destination_list_params()
+    _action(create_destination_list)(params, asset)
+    mock_client.CreateDestinationList.assert_called_once()
+    call_body = mock_client.CreateDestinationList.call_args[0][0]
+    assert call_body["name"] == "SOAR test destination list"
+    assert call_body["access"] == "none"
+    assert call_body["isGlobal"] is False
+    assert call_body["bundleTypeId"] == 2
+    assert call_body["destinations"] == [
+        {"destination": "example.com", "type": "domain"}
+    ]
 
 
 def test_add_to_destination_list_calls_client_with_one_destination(

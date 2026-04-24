@@ -21,6 +21,7 @@ from soar_sdk.logging import getLogger
 
 from .params import (
     AddToDestinationListParams,
+    CreateDestinationListParams,
     CreateRuleParams,
     DeleteManagedDeviceParams,
     DeleteSWGOverrideDeviceSettingsParams,
@@ -60,6 +61,7 @@ from .outputs import (
     ListSitesOutput,
     ListDestinationListsOutput,
     AddToDestinationListOutput,
+    CreateDestinationListOutput,
     RemoveDestinationsFromListOutput,
     GetDomainStatusOutput,
     GetDomainRiskScoreOutput,
@@ -85,6 +87,8 @@ MAX_LIMIT_FIREWALL_RULES = 1000
 MAX_LIMIT_RESOURCE_CONNECTORS = 100
 MAX_IDENTITIES_UPDATE = 250
 MAX_SWG_ORIGIN_IDS = 100
+MAX_DESTINATIONS_CREATE_DESTINATION_LIST = 500
+_DESTINATION_CREATE_TYPES = frozenset({"domain", "url", "ipv4"})
 
 # Domain status code -> human-readable description
 DOMAIN_STATUS_DESCRIPTIONS = {-1: "Malicious", 1: "Benign", 0: "Unclassified"}
@@ -127,6 +131,49 @@ def _output_from_api_data(OutputModel, data: dict):
 def _parse_comma_list(s: str) -> list[str]:
     """Split comma-separated string into non-empty stripped strings."""
     return [x.strip() for x in (s or "").split(",") if x.strip()]
+
+
+def _destinations_for_create_destination_list(
+    destinations_json: str | None,
+) -> list[dict] | None:
+    """
+    Parse and validate destinations_json for POST /destinationlists.
+    Returns a list suitable for the API body, or None if omitted/blank.
+    """
+    if destinations_json is None or not str(destinations_json).strip():
+        return None
+    parsed = _parse_json_param(
+        str(destinations_json).strip(), "destinations_json", allow_list=True
+    )
+    if len(parsed) > MAX_DESTINATIONS_CREATE_DESTINATION_LIST:
+        raise ValueError(
+            f"destinations_json must contain at most "
+            f"{MAX_DESTINATIONS_CREATE_DESTINATION_LIST} destinations"
+        )
+    out: list[dict] = []
+    for i, item in enumerate(parsed):
+        if not isinstance(item, dict):
+            raise ValueError(f"destinations_json[{i}] must be a JSON object")
+        dest = item.get("destination")
+        typ = item.get("type")
+        if dest is None or typ is None:
+            raise ValueError(
+                f"destinations_json[{i}] must include destination and type fields"
+            )
+        dest_s = str(dest).strip()
+        typ_s = str(typ).strip()
+        if not dest_s:
+            raise ValueError(f"destinations_json[{i}] destination must be non-empty")
+        if typ_s not in _DESTINATION_CREATE_TYPES:
+            raise ValueError(
+                f"destinations_json[{i}] type must be one of: "
+                f"{', '.join(sorted(_DESTINATION_CREATE_TYPES))}"
+            )
+        row: dict = {"destination": dest_s, "type": typ_s}
+        if item.get("comment") is not None:
+            row["comment"] = str(item["comment"])
+        out.append(row)
+    return out
 
 
 def _normalize_destination_for_match(value: str) -> str:
@@ -409,6 +456,44 @@ def list_destination_lists(
     else:
         destination_lists_output = destination_lists
     return ListDestinationListsOutput(destinationLists=destination_lists_output)
+
+
+@app.action()
+def create_destination_list(
+    params: CreateDestinationListParams, asset: Asset
+) -> CreateDestinationListOutput:
+    """
+    Create a destination list in the organization (optional initial destinations).
+    POST policies/v2/destinationlists. Requires policies.destinationLists:write.
+    Secure Access does not support global destination lists on create; the request always sets isGlobal to false.
+    https://developer.cisco.com/docs/cloud-security/create-destination-list/
+    """
+    name = params.name.strip()
+    if not name:
+        raise ValueError("name must be a non-empty string")
+
+    destinations = _destinations_for_create_destination_list(params.destinations_json)
+    body: dict = {
+        "access": params.access,
+        "isGlobal": False,
+        "name": name,
+        "bundleTypeId": 2,
+    }
+    if destinations:
+        body["destinations"] = destinations
+
+    logger.info("Creating destination list name=%r access=%s", name, params.access)
+    client = asset.get_client()
+    raw = client.CreateDestinationList(body)
+    if not isinstance(raw, dict):
+        raise ValueError("Unexpected API response for create destination list")
+    data = raw.get("data", raw)
+    if not isinstance(data, dict):
+        raise ValueError("Unexpected API response data for create destination list")
+    if data.get("meta") is not None:
+        data = flatten_field([data], "meta")[0]
+    logger.info("Created destination list id=%s", data.get("id"))
+    return CreateDestinationListOutput(destinationList=data)
 
 
 @app.action()

@@ -149,6 +149,12 @@ class AddToDestinationListOutput(ActionOutput):
     addedDestinationId: str | None = None
 
 
+class CreateDestinationListOutput(ActionOutput):
+    """Response data from Create Destination List (POST policies/v2/destinationlists)."""
+
+    destinationList: DestinationList
+
+
 class RemoveDestinationsFromListOutput(ActionOutput):
     destinationList: DestinationList
 

@@ -30,6 +30,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [list virtual appliances](#action-list-virtual-appliances) - List SSE Virtual Appliances <br>
 [list sites](#action-list-sites) - List all Sites in the organization (fetches all pages). <br>
 [list destination lists](#action-list-destination-lists) - List Destination Lists <br>
+[create destination list](#action-create-destination-list) - Create Destination List (optional initial destinations, up to 500 per request). <br>
 [add to destination list](#action-add-to-destination-list) - Add to Destination List (one destination and optional comment per run). <br>
 [remove destinations from list](#action-remove-destinations-from-list) - Remove from Destination List <br>
 [get domain status](#action-get-domain-status) - Get Domain Status <br>
@@ -301,6 +302,55 @@ action_result.data.\*.destinationLists.\*.destinations.\*.type | string | | |
 action_result.data.\*.destinationLists.\*.destinations.\*.createdAt | string | | |
 action_result.data.\*.destinationLists.\*.destinations.\*.destination | string | `domain` | |
 action_result.data.\*.destinationLists.\*.destinations.\*.comment | string | | |
+summary.total_objects | numeric | | 1 |
+summary.total_objects_successful | numeric | | 1 |
+
+## action: 'create destination list'
+
+Create a destination list in the organization. Optional `destinations_json` can include up to 500 destination objects per request. Per Cisco Secure Access, there is no support for global destination lists on create: the connector always sends `isGlobal` **false** and `bundleTypeId` **2**; those fields are not playbook parameters. Requires OAuth scope `policies.destinationLists:write`. See [Create Destination List](https://developer.cisco.com/docs/cloud-security/create-destination-list/).
+
+Type: **generic** <br>
+Read only: **False**
+
+#### Action Parameters
+
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**name** | required | Name of the destination list. | string | |
+**access** | required | Access classification: allow, block, url_proxy, no_decrypt, warn, none, thirdparty_block. | string | |
+**destinations_json** | optional | JSON array of up to 500 objects: destination (domain, URL, or IPv4 string), type (domain, url, or ipv4), optional comment. | string | |
+
+#### Action Output
+
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.name | string | | |
+action_result.parameter.access | string | | |
+action_result.parameter.destinations_json | string | | |
+action_result.data.\*.destinationList.id | numeric | | |
+action_result.data.\*.destinationList.organizationId | numeric | | |
+action_result.data.\*.destinationList.access | string | | |
+action_result.data.\*.destinationList.isGlobal | boolean | | True False |
+action_result.data.\*.destinationList.name | string | | |
+action_result.data.\*.destinationList.thirdpartyCategoryId | numeric | | |
+action_result.data.\*.destinationList.createdAt | numeric | | |
+action_result.data.\*.destinationList.modifiedAt | numeric | | |
+action_result.data.\*.destinationList.isMspDefault | boolean | | True False |
+action_result.data.\*.destinationList.markedForDeletion | boolean | | True False |
+action_result.data.\*.destinationList.bundleTypeId | numeric | | |
+action_result.data.\*.destinationList.destinationCount | numeric | | |
+action_result.data.\*.destinationList.domainCount | numeric | | |
+action_result.data.\*.destinationList.urlCount | numeric | | |
+action_result.data.\*.destinationList.ipv4Count | numeric | | |
+action_result.data.\*.destinationList.ipv6Count | numeric | | |
+action_result.data.\*.destinationList.applicationCount | numeric | | |
+action_result.data.\*.destinationList.destinations.\*.id | string | | |
+action_result.data.\*.destinationList.destinations.\*.type | string | | |
+action_result.data.\*.destinationList.destinations.\*.createdAt | string | | |
+action_result.data.\*.destinationList.destinations.\*.destination | string | `domain` | |
+action_result.data.\*.destinationList.destinations.\*.comment | string | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 

@@ -31,6 +31,22 @@
             ]
         },
         {
+            "name": "Create Destination List",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "src.app",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "action",
+                "create-destination-list",
+                "-a",
+                "${workspaceFolder}/test/test_asset.json",
+                "-p",
+                "${workspaceFolder}/test/test_params_create_destination_list.json"
+            ]
+        },
+        {
             "name": "Add to Destination List",
             "type": "debugpy",
             "request": "launch",
